@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from backend.core.exceptions.base import CustomException
 
 
-async def custom_exception_handler(_: Request, exc: CustomException) -> JSONResponse:
+async def custom_exception_handler(_: Request, exc: Exception) -> JSONResponse:
     """Преобразовать доменное исключение в HTTP ответ.
 
     Args:
@@ -14,4 +14,6 @@ async def custom_exception_handler(_: Request, exc: CustomException) -> JSONResp
     Returns:
         JSONResponse: Сформированный HTTP ответ.
     """
-    return JSONResponse(status_code=exc.status_code, content=exc.errors)
+    if isinstance(exc, CustomException):
+        return JSONResponse(status_code=exc.status_code, content=exc.errors)
+    return JSONResponse(status_code=500, content={"message": "Internal server error"})

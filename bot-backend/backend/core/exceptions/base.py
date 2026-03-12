@@ -23,7 +23,9 @@ class CustomException(Exception, ABC):
         """
 
 
-def generate_responses_from_exceptions(*exceptions: CustomException) -> dict[int, dict[str, object]]:
+def generate_responses_from_exceptions(
+    *exceptions: CustomException,
+) -> dict[int, dict[str, object]]:
     """Сгенерировать OpenAPI responses из исключений.
 
     Args:
@@ -35,7 +37,7 @@ def generate_responses_from_exceptions(*exceptions: CustomException) -> dict[int
     responses: dict[int, dict[str, object]] = {}
     for exception in exceptions:
         code = exception.status_code
-        payload = {
+        payload: dict[str, object] = {
             "description": exception.errors.get("message", "Ошибка"),
             "content": {"application/json": {"example": exception.errors}},
         }

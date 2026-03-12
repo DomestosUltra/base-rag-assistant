@@ -24,7 +24,9 @@ class UserSettingsService:
             self._settings_by_user[user_id] = settings
         return settings
 
-    def set_save_scope(self, user_id: str, scope: Literal["shared", "personal"]) -> TelegramUserSettingsDTO:
+    def set_save_scope(
+        self, user_id: str, scope: Literal["shared", "personal"]
+    ) -> TelegramUserSettingsDTO:
         """Установить режим сохранения пользователя.
 
         Args:

@@ -4,7 +4,13 @@ from dishka import AsyncContainer, Provider, Scope, make_async_container, provid
 from dishka.integrations.fastapi import FastapiProvider
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.config import DatabaseSettings, OpenAISettings, Settings, WeaviateSettings, get_settings
+from backend.core.config import (
+    DatabaseSettings,
+    OpenAISettings,
+    Settings,
+    WeaviateSettings,
+    get_settings,
+)
 from backend.domain.repositories.dialogue_repository import DialogueRepository
 from backend.domain.services.dialogue_service import DialogueService
 from backend.domain.services.rag_service import RagService

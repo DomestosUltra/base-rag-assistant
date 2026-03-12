@@ -19,7 +19,9 @@ class KnowledgeMetadataRequest(BaseModel):
         description="Область видимости документа: shared или personal",
     )
     tags: list[str] = Field(default_factory=list, description="Список тегов документа")
-    created_at: datetime | None = Field(default=None, description="Время создания исходного документа")
+    created_at: datetime | None = Field(
+        default=None, description="Время создания исходного документа"
+    )
 
 
 class KnowledgeDocumentRequest(BaseModel):
