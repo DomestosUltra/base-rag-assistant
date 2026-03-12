@@ -291,7 +291,10 @@ class MediaHandler:
             if file_bytes is None:
                 raise RuntimeError("Telegram file bytes are empty")
             content_bytes = file_bytes.read()
-            text = self._extract_text_from_document(content_bytes=content_bytes, suffix=suffix).strip()
+            text = self._extract_text_from_document(
+                content_bytes=content_bytes,
+                suffix=suffix,
+            ).strip()
         except Exception as error:
             logger.exception("Failed to download Telegram file: %s", error)
             await self._finalize_processing_message(

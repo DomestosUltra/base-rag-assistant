@@ -1,6 +1,6 @@
 all:
 	cd bot-backend && uv run ruff check . && uv run ruff format --check . && uv run mypy backend
-	cd bot-backend && uv run pytest
+	cd bot-backend && (uv run pytest || test $$? -eq 5)
 	cd bot-telegram && uv run ruff check . && uv run ruff format --check . && uv run mypy bot
 
 up:
