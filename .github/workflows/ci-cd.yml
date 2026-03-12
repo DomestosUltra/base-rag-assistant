@@ -142,19 +142,17 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         env:
           REGISTRY: docker.io
+          REGISTRY_NAMESPACE: ${{ secrets.REGISTRY_NAMESPACE }}
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
           REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-          BACKEND_IMAGE: ${{ needs['build-and-push'].outputs.repository_image }}
-          BOT_IMAGE: ${{ needs['build-and-push'].outputs.repository_image }}
-          BACKEND_TAG: ${{ needs['build-and-push'].outputs.backend_tag }}
-          BOT_TAG: ${{ needs['build-and-push'].outputs.bot_tag }}
+          DEPLOY_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script_stop: true
-          envs: REGISTRY,REGISTRY_USERNAME,REGISTRY_PASSWORD,BACKEND_IMAGE,BOT_IMAGE,BACKEND_TAG,BOT_TAG
+          envs: REGISTRY,REGISTRY_NAMESPACE,REGISTRY_USERNAME,REGISTRY_PASSWORD,DEPLOY_SHA
           script: |
             set -eu
             APP_DIR="${{ secrets.APP_DIR }}"
@@ -173,6 +171,18 @@ jobs:
               echo "REGISTRY_USERNAME and REGISTRY_PASSWORD secrets are required"
               exit 1
             fi
+
+            NAMESPACE="${REGISTRY_NAMESPACE:-$REGISTRY_USERNAME}"
+            if [ -z "$NAMESPACE" ]; then
+              echo "REGISTRY_NAMESPACE/REGISTRY_USERNAME is required"
+              exit 1
+            fi
+            NAMESPACE_LOWER=$(echo "$NAMESPACE" | tr '[:upper:]' '[:lower:]')
+
+            BACKEND_IMAGE="docker.io/${NAMESPACE_LOWER}/vps"
+            BOT_IMAGE="docker.io/${NAMESPACE_LOWER}/vps"
+            BACKEND_TAG="backend-${DEPLOY_SHA}"
+            BOT_TAG="bot-${DEPLOY_SHA}"
 
             if [ -z "${BACKEND_IMAGE:-}" ] || [ -z "${BOT_IMAGE:-}" ] || [ -z "${BACKEND_TAG:-}" ] || [ -z "${BOT_TAG:-}" ]; then
               echo "Image variables are empty: BACKEND_IMAGE/BOT_IMAGE/BACKEND_TAG/BOT_TAG"
