@@ -73,8 +73,15 @@ class MediaHandler:
             return
 
         try:
-            file_info = await message.bot.get_file(voice.file_id)
-            file_bytes = await message.bot.download_file(file_info.file_path)
+            bot = message.bot
+            if bot is None:
+                raise RuntimeError("Telegram bot instance is not available")
+            file_info = await bot.get_file(voice.file_id)
+            if not file_info.file_path:
+                raise RuntimeError("Telegram file path is empty")
+            file_bytes = await bot.download_file(file_info.file_path)
+            if file_bytes is None:
+                raise RuntimeError("Telegram file bytes are empty")
             audio_bytes = file_bytes.read()
         except Exception as error:
             logger.exception("Failed to download Telegram voice: %s", error)
@@ -149,8 +156,15 @@ class MediaHandler:
 
         largest_photo = photos[-1]
         try:
-            file_info = await message.bot.get_file(largest_photo.file_id)
-            file_bytes = await message.bot.download_file(file_info.file_path)
+            bot = message.bot
+            if bot is None:
+                raise RuntimeError("Telegram bot instance is not available")
+            file_info = await bot.get_file(largest_photo.file_id)
+            if not file_info.file_path:
+                raise RuntimeError("Telegram file path is empty")
+            file_bytes = await bot.download_file(file_info.file_path)
+            if file_bytes is None:
+                raise RuntimeError("Telegram file bytes are empty")
             image_bytes = file_bytes.read()
         except Exception as error:
             logger.exception("Failed to download Telegram photo: %s", error)
@@ -242,14 +256,20 @@ class MediaHandler:
             )
             await self._finalize_processing_message(
                 processing_message,
-                "⚠️ Поддерживаются только текстовые файлы:\n"
-                "txt, md, csv, json, log, rst.",
+                "⚠️ Поддерживаются только текстовые файлы:\ntxt, md, csv, json, log, rst.",
             )
             return
 
         try:
-            file_info = await message.bot.get_file(document.file_id)
-            file_bytes = await message.bot.download_file(file_info.file_path)
+            bot = message.bot
+            if bot is None:
+                raise RuntimeError("Telegram bot instance is not available")
+            file_info = await bot.get_file(document.file_id)
+            if not file_info.file_path:
+                raise RuntimeError("Telegram file path is empty")
+            file_bytes = await bot.download_file(file_info.file_path)
+            if file_bytes is None:
+                raise RuntimeError("Telegram file bytes are empty")
             content_bytes = file_bytes.read()
             text = content_bytes.decode("utf-8", errors="ignore").strip()
         except Exception as error:

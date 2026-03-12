@@ -36,8 +36,8 @@ class WeaviateKnowledgeStore:
         )
         self._embeddings = OpenAIEmbeddings(
             model=openai.embedding_model,
-            api_key=openai.api_key,
-            base_url=openai.base_url,
+            openai_api_key=openai.api_key,
+            openai_api_base=openai.base_url,
         )
         self._vector_store = WeaviateVectorStore(
             client=self._client,
@@ -168,7 +168,9 @@ class WeaviateKnowledgeStore:
         prepared_chunks: list[str] = []
         prepared_metadatas: list[dict[str, Any]] = []
         for document in documents:
-            chunks, metadatas = self._prepare_document_chunks(document=document, ingested_by=ingested_by)
+            chunks, metadatas = self._prepare_document_chunks(
+                document=document, ingested_by=ingested_by
+            )
             prepared_chunks.extend(chunks)
             prepared_metadatas.extend(metadatas)
         if not prepared_chunks:
@@ -210,7 +212,7 @@ class WeaviateKnowledgeStore:
             ingested_by=ingested_by,
         )
 
-    def _fetch_ids_by_filter(self, filters: Filter) -> list[str]:
+    def _fetch_ids_by_filter(self, filters: Any) -> list[str]:
         """Получить идентификаторы объектов по фильтру.
 
         Args:
@@ -272,9 +274,7 @@ class WeaviateKnowledgeStore:
         Returns:
             int: Количество удаленных объектов.
         """
-        ids = self._fetch_ids_by_filter(
-            Filter.by_property("document_id").equal(document_id)
-        )
+        ids = self._fetch_ids_by_filter(Filter.by_property("document_id").equal(document_id))
         return self._delete_ids(ids)
 
     def delete_by_external_id(self, external_id: str) -> int:
@@ -286,9 +286,7 @@ class WeaviateKnowledgeStore:
         Returns:
             int: Количество удаленных объектов.
         """
-        ids = self._fetch_ids_by_filter(
-            Filter.by_property("external_id").equal(external_id)
-        )
+        ids = self._fetch_ids_by_filter(Filter.by_property("external_id").equal(external_id))
         return self._delete_ids(ids)
 
     def delete_all(self) -> int:

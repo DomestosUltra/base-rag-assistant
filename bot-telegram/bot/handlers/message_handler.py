@@ -1,4 +1,5 @@
 import logging
+from typing import Literal, cast
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -76,7 +77,9 @@ class MessageHandler:
         Returns:
             str: Текст настроек.
         """
-        save_scope_text = "Общая коллекция" if settings.save_scope == "shared" else "Персональная коллекция"
+        save_scope_text = (
+            "Общая коллекция" if settings.save_scope == "shared" else "Персональная коллекция"
+        )
         search_mode_text = (
             "Общие + персональные данные"
             if settings.search_shared
@@ -152,7 +155,8 @@ class MessageHandler:
         if callback.data.startswith("settings:save_scope:"):
             scope = callback.data.split(":")[-1]
             if scope in {"shared", "personal"}:
-                settings = self._user_settings_service.set_save_scope(user_id, scope)
+                typed_scope = cast(Literal["shared", "personal"], scope)
+                settings = self._user_settings_service.set_save_scope(user_id, typed_scope)
         elif callback.data == "settings:toggle_search_shared":
             settings = self._user_settings_service.toggle_search_shared(user_id)
 
@@ -165,7 +169,7 @@ class MessageHandler:
             settings.search_shared,
         )
 
-        if callback.message is not None:
+        if isinstance(callback.message, Message):
             await callback.message.edit_text(
                 self._build_settings_text(settings),
                 reply_markup=self._build_settings_keyboard(settings),
@@ -240,7 +244,9 @@ class MessageHandler:
             )
             return
 
-        processing_message = await message.answer(f"⏳ Сохраняю текст в {scope_text} базу знаний...")
+        processing_message = await message.answer(
+            f"⏳ Сохраняю текст в {scope_text} базу знаний..."
+        )
 
         metadata = TelegramKnowledgeMetadataDTO(
             title=content[:80],
@@ -264,8 +270,7 @@ class MessageHandler:
             )
             await self._finalize_processing_message(
                 processing_message,
-                f"✅ Текст сохранён в {scope_text} базу знаний.\n"
-                f"Чанков: {saved_chunks}",
+                f"✅ Текст сохранён в {scope_text} базу знаний.\nЧанков: {saved_chunks}",
             )
         except Exception as error:
             logger.exception(

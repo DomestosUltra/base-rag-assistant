@@ -34,9 +34,7 @@ class DatabaseSettings(BaseSettings):
         Returns:
             str: Строка подключения SQLAlchemy async.
         """
-        return (
-            f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
-        )
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
 
 
 class OpenAISettings(BaseSettings):

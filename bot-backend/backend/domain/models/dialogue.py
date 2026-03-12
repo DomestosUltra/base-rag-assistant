@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime
+from sqlalchemy import Column, DateTime
 from sqlmodel import Field, SQLModel
 from uuid_utils import uuid7
 
@@ -18,6 +18,6 @@ class DialogueRecord(SQLModel, table=True):
     request_type: str = Field(max_length=32, description="Тип запроса")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
-        sa_type=DateTime(timezone=True),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
         description="Время",
     )

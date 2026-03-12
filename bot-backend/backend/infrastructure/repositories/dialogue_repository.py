@@ -1,5 +1,6 @@
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col
 
 from backend.domain.models.dialogue import DialogueRecord
 from backend.domain.repositories.dialogue_repository import DialogueRepository
@@ -44,9 +45,8 @@ class DialogueRepositoryImpl(DialogueRepository):
         Returns:
             list[DialogueRecord]: Список записей.
         """
-        table = DialogueRecord.__table__
-        statement = select(DialogueRecord).where(table.c.user_id == user_id)
-        statement = statement.order_by(table.c.created_at.desc()).limit(limit)
+        statement = select(DialogueRecord).where(col(DialogueRecord.user_id) == user_id)
+        statement = statement.order_by(col(DialogueRecord.created_at).desc()).limit(limit)
         result = await self._session.execute(statement)
         return list(result.scalars().all())
 
@@ -59,12 +59,15 @@ class DialogueRepositoryImpl(DialogueRepository):
         Returns:
             int: Количество удаленных записей.
         """
-        table = DialogueRecord.__table__
-        count_statement = select(func.count()).select_from(table).where(table.c.user_id == user_id)
+        count_statement = (
+            select(func.count())
+            .select_from(DialogueRecord)
+            .where(col(DialogueRecord.user_id) == user_id)
+        )
         count_result = await self._session.execute(count_statement)
         deleted_count = int(count_result.scalar_one())
         if deleted_count == 0:
             return 0
-        statement = delete(DialogueRecord).where(table.c.user_id == user_id)
+        statement = delete(DialogueRecord).where(col(DialogueRecord.user_id) == user_id)
         await self._session.execute(statement)
         return deleted_count
