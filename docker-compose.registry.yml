@@ -52,7 +52,7 @@ services:
       PORT: "3000"
 
   backend:
-    image: ${BACKEND_IMAGE}:${IMAGE_TAG}
+    image: ${BACKEND_IMAGE}:${BACKEND_TAG}
     env_file:
       - .env
     ports:
@@ -64,7 +64,7 @@ services:
         condition: service_healthy
 
   bot:
-    image: ${BOT_IMAGE}:${IMAGE_TAG}
+    image: ${BOT_IMAGE}:${BOT_TAG}
     env_file:
       - .env
     ports:
