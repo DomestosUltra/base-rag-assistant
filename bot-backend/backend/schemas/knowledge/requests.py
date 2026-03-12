@@ -50,7 +50,7 @@ class KnowledgeSaveTextsRequest(BaseModel):
 class KnowledgeSaveFileRequest(BaseModel):
     """Запрос на сохранение текста из файла в базу знаний."""
 
-    file_path: str = Field(min_length=1, description="Путь к текстовому файлу")
+    file_path: str = Field(min_length=1, description="Путь к файлу (.txt или .docx)")
     metadata: KnowledgeMetadataRequest = Field(
         default_factory=KnowledgeMetadataRequest,
         description="Метаданные документа",
