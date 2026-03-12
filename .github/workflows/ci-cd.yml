@@ -104,6 +104,30 @@ jobs:
     if: github.ref == 'refs/heads/stage'
 
     steps:
+      - name: Validate deploy secrets
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          APP_DIR: ${{ secrets.APP_DIR }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          set -eu
+          missing=""
+          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY APP_DIR REGISTRY_USERNAME REGISTRY_PASSWORD; do
+            eval "value=\${$name}"
+            if [ -z "$value" ]; then
+              missing="$missing $name"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "Missing required GitHub Action secrets:$missing"
+            echo "Set them in Settings -> Secrets and variables -> Actions"
+            exit 1
+          fi
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
