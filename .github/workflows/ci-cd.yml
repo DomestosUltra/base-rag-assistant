@@ -174,15 +174,13 @@ jobs:
               exit 1
             fi
 
+            if [ -z "${BACKEND_IMAGE:-}" ] || [ -z "${BOT_IMAGE:-}" ] || [ -z "${BACKEND_TAG:-}" ] || [ -z "${BOT_TAG:-}" ]; then
+              echo "Image variables are empty: BACKEND_IMAGE/BOT_IMAGE/BACKEND_TAG/BOT_TAG"
+              exit 1
+            fi
+
             echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin
 
-            cat > .deploy.env <<EOF
-            BACKEND_IMAGE=$BACKEND_IMAGE
-            BOT_IMAGE=$BOT_IMAGE
-            BACKEND_TAG=$BACKEND_TAG
-            BOT_TAG=$BOT_TAG
-            EOF
-
-            docker compose --env-file .deploy.env -f docker-compose.registry.yml pull backend bot
-            docker compose --env-file .deploy.env -f docker-compose.registry.yml up -d --remove-orphans
+            BACKEND_IMAGE="$BACKEND_IMAGE" BOT_IMAGE="$BOT_IMAGE" BACKEND_TAG="$BACKEND_TAG" BOT_TAG="$BOT_TAG" docker compose -f docker-compose.registry.yml pull backend bot
+            BACKEND_IMAGE="$BACKEND_IMAGE" BOT_IMAGE="$BOT_IMAGE" BACKEND_TAG="$BACKEND_TAG" BOT_TAG="$BOT_TAG" docker compose -f docker-compose.registry.yml up -d --remove-orphans
             docker image prune -f
