@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -190,6 +191,34 @@ class WeaviateKnowledgeStore:
         """
         return self.save_documents(documents=[document], ingested_by=ingested_by)
 
+    @staticmethod
+    def _extract_text_from_docx(path: Path) -> str:
+        """Извлечь текст из .docx файла.
+
+        Args:
+            path: Путь к .docx файлу.
+
+        Returns:
+            str: Текст документа.
+        """
+        docx_module: Any = import_module("docx")
+        document = docx_module.Document(str(path))
+        paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        return "\n".join(paragraphs)
+
+    def _read_knowledge_file_text(self, path: Path) -> str:
+        """Прочитать поддерживаемый файл знаний и вернуть текст.
+
+        Args:
+            path: Путь к файлу.
+
+        Returns:
+            str: Текстовое содержимое файла.
+        """
+        if path.suffix.lower() == ".docx":
+            return self._extract_text_from_docx(path)
+        return path.read_text(encoding="utf-8")
+
     def save_from_file(self, request: KnowledgeSaveFileRequest, ingested_by: str) -> int:
         """Сохранить содержимое файла базы знаний в векторную БД.
 
@@ -206,7 +235,7 @@ class WeaviateKnowledgeStore:
         path = Path(request.file_path)
         if not path.exists():
             raise FileNotFoundError(request.file_path)
-        text = path.read_text(encoding="utf-8")
+        text = self._read_knowledge_file_text(path)
         return self.save_document(
             document=KnowledgeDocumentRequest(text=text, metadata=request.metadata),
             ingested_by=ingested_by,

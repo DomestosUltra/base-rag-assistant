@@ -1,5 +1,8 @@
 import logging
+from importlib import import_module
+from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 from aiogram import F, Router
 from aiogram.types import Message
@@ -238,14 +241,30 @@ class MediaHandler:
             return
 
         processing_message = await message.answer(
-            f"📄 Обрабатываю файл и сохраняю в {scope_text} базу знаний..."
+            f"📄 Если формат файла поддерживается, сохраню его в {scope_text} базу знаний..."
         )
 
         file_name = document.file_name or "document"
         suffix = Path(file_name).suffix.lower()
         mime_type = (document.mime_type or "").lower()
-        supported_suffixes = {".txt", ".md", ".markdown", ".csv", ".json", ".log", ".rst"}
-        if not (mime_type.startswith("text/") or suffix in supported_suffixes):
+        supported_suffixes = {
+            ".txt",
+            ".md",
+            ".markdown",
+            ".csv",
+            ".json",
+            ".log",
+            ".rst",
+            ".docx",
+        }
+        supported_mime_types = {
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        }
+        if not (
+            mime_type.startswith("text/")
+            or mime_type in supported_mime_types
+            or suffix in supported_suffixes
+        ):
             logger.info(
                 "telegram_action=document_rejected_type user_id=%s chat_id=%s message_id=%s mime_type=%s suffix=%s",
                 user_id,
@@ -256,7 +275,8 @@ class MediaHandler:
             )
             await self._finalize_processing_message(
                 processing_message,
-                "⚠️ Поддерживаются только текстовые файлы:\ntxt, md, csv, json, log, rst.",
+                "⚠️ Этот формат не поддерживается.\n"
+                "Поддерживаются файлы, которые сохраняются в базу: txt, md, csv, json, log, rst, docx.",
             )
             return
 
@@ -271,7 +291,7 @@ class MediaHandler:
             if file_bytes is None:
                 raise RuntimeError("Telegram file bytes are empty")
             content_bytes = file_bytes.read()
-            text = content_bytes.decode("utf-8", errors="ignore").strip()
+            text = self._extract_text_from_document(content_bytes=content_bytes, suffix=suffix).strip()
         except Exception as error:
             logger.exception("Failed to download Telegram file: %s", error)
             await self._finalize_processing_message(
@@ -332,3 +352,32 @@ class MediaHandler:
                 processing_message,
                 "⚠️ Не удалось сохранить файл в базу знаний.\nПопробуй ещё раз позже.",
             )
+
+    @staticmethod
+    def _extract_text_from_docx(content_bytes: bytes) -> str:
+        """Извлечь текст из DOCX файла.
+
+        Args:
+            content_bytes: Бинарное содержимое файла.
+
+        Returns:
+            str: Текст документа.
+        """
+        docx_module: Any = import_module("docx")
+        document = docx_module.Document(BytesIO(content_bytes))
+        paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        return "\n".join(paragraphs)
+
+    def _extract_text_from_document(self, content_bytes: bytes, suffix: str) -> str:
+        """Извлечь текст из поддерживаемого файла.
+
+        Args:
+            content_bytes: Бинарное содержимое файла.
+            suffix: Расширение файла.
+
+        Returns:
+            str: Текст файла.
+        """
+        if suffix == ".docx":
+            return self._extract_text_from_docx(content_bytes)
+        return content_bytes.decode("utf-8", errors="ignore")
